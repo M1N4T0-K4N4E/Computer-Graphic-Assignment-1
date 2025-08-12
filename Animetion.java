@@ -96,13 +96,13 @@ class RebornPanel extends JPanel {
 
         // รถวิ่งจากขวาเข้ามา (x from 650 to 280)
         int carStartX = W + 50;
-        int carEndX = stickmanX + 40; // ใกล้ stickman เลย
+        int carEndX = stickmanX + 15; // ใกล้ stickman เลย
         int carX = (int) (carStartX + (carEndX - carStartX) * progress);
 
         // motion blur effect รถ: วาดรถซ้อน 5 ชั้นโปร่งใสลดหลั่น
        for (int i = 0; i < 5; i++) {
             float alpha = 0.15f * (5 - i);
-            int blurX = carX + i * 20;  // blur ขยับเยอะขึ้นให้ชัดเจน
+            int blurX = carX + i * 15;  // blur ขยับเยอะขึ้นให้ชัดเจน
             drawTruck(g, blurX, groundY - 20, alpha);
         }
     }
