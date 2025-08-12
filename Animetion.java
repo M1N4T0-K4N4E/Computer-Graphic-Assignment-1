@@ -102,8 +102,8 @@ class RebornPanel extends JPanel {
         // motion blur effect รถ: วาดรถซ้อน 5 ชั้นโปร่งใสลดหลั่น
        for (int i = 0; i < 5; i++) {
             float alpha = 0.15f * (5 - i);
-            int blurX = carX - i * 20;  // blur ขยับเยอะขึ้นให้ชัดเจน
-            drawTruck(g, blurX, groundY - 50, alpha);
+            int blurX = carX + i * 20;  // blur ขยับเยอะขึ้นให้ชัดเจน
+            drawTruck(g, blurX, groundY - 20, alpha);
         }
     }
 
