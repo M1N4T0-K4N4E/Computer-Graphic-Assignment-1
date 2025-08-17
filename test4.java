@@ -1,9 +1,32 @@
+/*
+Assignment: WHAT IF I REBORNED 
+66050946 Phawothai Na Pairee , 66050859 
+File: Assignment1_66xxxxxxxx_66yyyyyyyy.java
+
+Resolution: 600 x 600, Duration: ~8s loop @ ~60 FPS
+APIs used: Swing, BufferedImage, Graphics.drawImage (no Graphics2D draw/fill except drawImage)
+
+Algorithms implemented (from scratch):
+- Lines: Bresenham (1965)
+- Curves: Quadratic Bézier via De Casteljau sampling (1959)
+- Circles/Ellipses: Midpoint circle & midpoint ellipse
+- Polygon fill: Scanline algorithm
+- Alpha compositing (premultiplied) for motion blur & polish
+
+References:
+- J. E. Bresenham, “Algorithm for computer control of a digital plotter,” IBM Systems Journal, 1965.
+- De Casteljau, P. (1959). De Casteljau’s algorithm for Bézier curves.
+- Foley, van Dam, Feiner, Hughes, *Computer Graphics: Principles and Practice*, 2nd ed.
+Notes:
+- All rasterization code and scanline fills are original for this assignment.
+*/
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.*;
 import java.util.*;
 
-public class test3 {
+public class test4 {
     public static void main(String[] args){
         SwingUtilities.invokeLater(() -> {
             JFrame f = new JFrame("WHAT IF I REBORNED — Slime (Pixel Engine)");
@@ -27,6 +50,21 @@ class PixelPanel extends JPanel implements Runnable {
     private final double T2 = 3.0;   // fade to black
     private final double T3 = 8.0;   // slime world
 
+    // --- Config / Constants (ลด magic numbers) ---
+    private static final double FPS = 60.0;
+
+    private static final int SKY_BASE_Y = 360;
+
+    private static final int ROAD_Y_TOP    = 430;
+    private static final int ROAD_Y_BOTTOM = 600;
+
+    private static final int DASH_WIDTH  = 50;
+    private static final int DASH_GAP    = 30;       // step = width + gap = 80
+    private static final int DASH_Y      = 510;
+    private static final int DASH_THICK  = 10;
+
+    private static final int GROUND_Y    = ROAD_Y_TOP; // baseline ตัวละคร
+
     // --- Slime smoothing state (to reduce shimmer) ---
     private double rxSm = 130, rySm = 110;
 
@@ -40,7 +78,7 @@ class PixelPanel extends JPanel implements Runnable {
     @Override public void addNotify(){ super.addNotify(); t0 = System.nanoTime(); }
 
     @Override public void run(){
-        final double fps = 60.0; final long step = (long)(1_000_000_000L/fps);
+        final long step = (long)(1_000_000_000L / FPS);
         long last = System.nanoTime();
         while(running){
             long now = System.nanoTime();
@@ -150,7 +188,7 @@ class PixelPanel extends JPanel implements Runnable {
         } else {
             double u=(t-T2)/(T3-T2);
             sceneSlime(u);
-            // no grain in slime scene (keeps it stable)
+            // no grain (and no vignette) in slime scene for stability
         }
     }
 
@@ -171,19 +209,31 @@ class PixelPanel extends JPanel implements Runnable {
             for(int x=0;x<W;x++) pix[y*W+x]=ARGB(255,r,g,b);
         }
         // parallax skyline (polygons)
-        int base=360; int[] xs1={0,80,120,200,240,320,380,460,520,600,600,0}; int[] ys1={base,300,330,280,340,310,290,320,300,280,420,420}; fillPolygon(xs1,ys1,xs1.length, 35,45,70,255);
-        int[] xs2={0,60,140,180,260,300,360,420,480,540,600,600,0}; int[] ys2={base+30,340,350,330,360,340,355,340,360,335,350,420,420}; fillPolygon(xs2,ys2,xs2.length, 25,35,55,255);
+        int base = SKY_BASE_Y;
+        int[] xs1={0,80,120,200,240,320,380,460,520,600,600,0};
+        int[] ys1={base,300,330,280,340,310,290,320,300,280,ROAD_Y_BOTTOM,ROAD_Y_BOTTOM};
+        fillPolygon(xs1,ys1,xs1.length, 35,45,70,255);
+
+        int[] xs2={0,60,140,180,260,300,360,420,480,540,600,600,0};
+        int[] ys2={base+30,340,350,330,360,340,355,340,360,335,350,ROAD_Y_BOTTOM,ROAD_Y_BOTTOM};
+        fillPolygon(xs2,ys2,xs2.length, 25,35,55,255);
+
         // road
-        fillPolygon(new int[]{0,600,600,0}, new int[]{430,430,600,600}, 4, 40,40,45,255);
+        fillPolygon(new int[]{0,W,W,0}, new int[]{ROAD_Y_TOP,ROAD_Y_TOP,ROAD_Y_BOTTOM,ROAD_Y_BOTTOM}, 4, 40,40,45,255);
+
         // dashed center line
-        for(int x=0; x<600; x+=80){ fillPolygon(new int[]{x,x+50,x+50,x}, new int[]{510,510,520,520}, 4, 220,220,140,200); }
+        for(int x=0; x<W; x+= (DASH_WIDTH + DASH_GAP)){
+            fillPolygon(new int[]{x, x+DASH_WIDTH, x+DASH_WIDTH, x},
+                        new int[]{DASH_Y, DASH_Y, DASH_Y + DASH_THICK, DASH_Y + DASH_THICK},
+                        4, 220,220,140,200);
+        }
 
         // compute shake offset near impact (APPLIED ONLY TO FOREGROUND OBJECTS)
         int[] sh = impactShake(u);
         int shakeX = sh[0], shakeY = sh[1];
 
         // stickman walking (with object-only shake)
-        int sy = 430;
+        int sy = GROUND_Y;
         int sx = 100 + (int)(180*u);
         drawStickman(sx + shakeX, sy + shakeY);
 
