@@ -138,11 +138,6 @@ class PixelPanel extends JPanel implements Runnable {
         Arrays.fill(pix, col);
     }
 
-    private void pset(int x, int y, int col) {
-        if ((x | y) < 0 || x >= W || y >= H) return;
-        pix[y * W + x] = col;
-    }
-
     private void pblend(int x, int y, int sr, int sg, int sb, int sa) {
         if ((x | y) < 0 || x >= W || y >= H || sa <= 0) return;
 
@@ -202,33 +197,6 @@ class PixelPanel extends JPanel implements Runnable {
             if (e2 > -dy) { err -= dy; x += sx; }
             if (e2 <  dx) { err += dx; y += sy; }
         }
-    }
-
-    // Midpoint circle (outline)
-    private void circle(int cx, int cy, int rr, int r, int g, int b, int a) {
-        int x = 0, y = rr;
-        int d = 1 - rr;
-        while (x <= y) {
-            plot8(cx, cy, x, y, r, g, b, a);
-            if (d < 0) {
-                d += 2 * x + 3;
-            } else {
-                d += 2 * (x - y) + 5;
-                y--;
-            }
-            x++;
-        }
-    }
-
-    private void plot8(int cx, int cy, int x, int y, int r, int g, int b, int a) {
-        pblend(cx + x, cy + y, r, g, b, a);
-        pblend(cx - x, cy + y, r, g, b, a);
-        pblend(cx + x, cy - y, r, g, b, a);
-        pblend(cx - x, cy - y, r, g, b, a);
-        pblend(cx + y, cy + x, r, g, b, a);
-        pblend(cx - y, cy + x, r, g, b, a);
-        pblend(cx + y, cy - x, r, g, b, a);
-        pblend(cx - y, cy - x, r, g, b, a);
     }
 
     // Filled circle via horizontal spans
